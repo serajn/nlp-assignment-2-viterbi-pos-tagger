@@ -36,33 +36,36 @@ def count_tag_counts(file):
 
     return tag_counts
 
-'''
 def count_transition_counts(file):
     transition_counts = {}
-    with open(file, 'r') as f:
+
+    with open(file, 'r') as file:
         previous_tag = "<START>"
-        for line in f:
-            if line.strip():
-                _, tag = line.strip().split() 
-                if (previous_tag, tag) in transition_counts:
-                    transition_counts[(previous_tag, tag)] += 1
-                else:
-                    transition_counts[(previous_tag, tag)] = 1
-                previous_tag = tag
-            else:
-                previous_tag = "<START>"  # Reset at the end of a sentence
+
+        for line in file:
+            for token in line.split():
+                if token.strip():
+                    _, tag = token.strip().rsplit('/', 1)
+
+                    if (previous_tag, tag) in transition_counts:
+                        transition_counts[(previous_tag, tag)] += 1
+                    else:
+                        transition_counts[(previous_tag, tag)] = 1
+                    previous_tag = tag
+                
+            previous_tag = "<START>"  # Reset at the end of a sentence
+
     with open('transition_counts.txt', 'w') as f:
-        for (prev_tag, curr_tag), count in transition_counts.items():
-            f.write(f"{prev_tag} {curr_tag} {count}\n")
+        f.write(f" {transition_counts}\n")
+
     return transition_counts
 
-    '''
 def main():
     train_file = "../data/train/POS.train"
 
     word_tag_counts = count_word_tag_pairs(train_file)
     tag_counts = count_tag_counts(train_file)
-    #transition_counts = count_transition_counts(train_file)
+    transition_counts = count_transition_counts(train_file)
 
     return 0
 
