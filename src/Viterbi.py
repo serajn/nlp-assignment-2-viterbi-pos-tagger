@@ -17,22 +17,26 @@ def count_word_tag_pairs(file):
     
     return word_tag_counts
 
-'''
 def count_tag_counts(file):
     tag_counts = {}
-    with open(file, 'r') as f:
-        for line in f:
-            if line.strip():
-                _, tag = line.strip().split()
-                if tag in tag_counts:
-                    tag_counts[tag] += 1
-                else:
-                    tag_counts[tag] = 1
+
+    with open(file, 'r') as file:
+        for line in file:
+            for token in line.split():
+                if token.strip():
+                    _, tag = token.strip().rsplit('/', 1)
+
+                    if tag in tag_counts:
+                        tag_counts[tag] += 1
+                    else:
+                        tag_counts[tag] = 1
+
     with open('tag_counts.txt', 'w') as f:
-        for tag, count in tag_counts.items():
-            f.write(f"{tag} {count}\n")
+        f.write(f" {tag_counts}\n")
+
     return tag_counts
 
+'''
 def count_transition_counts(file):
     transition_counts = {}
     with open(file, 'r') as f:
@@ -57,7 +61,7 @@ def main():
     train_file = "../data/train/POS.train"
 
     word_tag_counts = count_word_tag_pairs(train_file)
-    #tag_counts = count_tag_counts(train_file)
+    tag_counts = count_tag_counts(train_file)
     #transition_counts = count_transition_counts(train_file)
 
     return 0
