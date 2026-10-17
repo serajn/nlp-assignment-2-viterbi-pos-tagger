@@ -60,6 +60,39 @@ def count_transition_counts(file):
 
     return transition_counts
 
+def count_sentences(file):
+    sentence_count = 0
+
+    with open(file, 'r') as file:
+        for line in file:
+            if line.strip():
+                sentence_count += 1
+
+    return sentence_count
+
+def viterbi(sentence, word_tag_counts, tag_counts, transition_counts):
+    words = []
+    tags = []
+
+    for token in sentence.split():
+        if token.strip():
+            word, tag = token.strip().rsplit('/', 1)
+            words.append(word)
+            tags.append(tag)
+
+    # Initialization Step
+    for t in range(len(tag_counts)):
+        score = word_tag_counts[(words[0], tags[0])] / tag_counts[tags[0]] * transition_counts["<START>", tags[0]] / tag_counts["<START>"]
+        
+
+
+def predict_tags(word_tag_counts, tag_counts, transition_counts, file): 
+    with open(file, 'r') as file:
+        for line in file:
+            sentence = line.strip()
+            predicted_tags = viterbi(sentence, word_tag_counts, tag_counts, transition_counts)
+            print(" ".join(predicted_tags))
+
 def main():
     train_file = "../data/train/POS.train"
 
