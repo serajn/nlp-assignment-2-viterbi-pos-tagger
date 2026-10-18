@@ -138,6 +138,23 @@ def predict_tags(word_tag_counts, tag_counts, transition_counts, sentence_count,
 
     return predicted_tags_list
 
+def evaluate(predicted_tags_list):
+    total_tags = 0
+    correct_tags = 0
+
+    for predicted_tags, ground_truth_tags in predicted_tags_list:
+        total_tags += len(ground_truth_tags)
+        correct_tags += sum(p == g for p, g in zip(predicted_tags, ground_truth_tags))
+
+    accuracy = correct_tags / total_tags if total_tags > 0 else 0
+
+    with open("POS.test.out", "w") as file:
+        for predicted_tags, ground_truth_tags in predicted_tags_list:
+            file.write(f"Predicted: {' '.join(predicted_tags)}\n")
+            file.write(f"Ground Truth: {' '.join(ground_truth_tags)}\n\n")
+
+    print(f"Accuracy: {accuracy:.2%}")
+
 def main():
     train_file = "../data/train/POS.train"
 
@@ -145,6 +162,9 @@ def main():
     tag_counts = count_tag_counts(train_file)
     transition_counts = count_transition_counts(train_file)
     sentence_count = count_sentences(train_file)
+
+    predicted_tags_list = predict_tags(word_tag_counts, tag_counts, transition_counts, sentence_count, "../data/test/POS.test")
+    evaluate(predicted_tags_list)
 
     return 0
 
