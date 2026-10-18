@@ -72,11 +72,13 @@ def count_sentences(file):
 
 def viterbi(sentence, sentence_count, word_tag_counts, tag_counts, transition_counts):
     words = []
+    ground_truth_tags = []
 
     for token in sentence.split():
         if token.strip():
-            word, _ = token.strip().rsplit('/', 1)
+            word, tag = token.strip().rsplit('/', 1) # Strip the tag from the word/tag pair
             words.append(word)
+            ground_truth_tags.append(tag)
 
     # Initialization Step
     scores = {}
@@ -123,15 +125,18 @@ def viterbi(sentence, sentence_count, word_tag_counts, tag_counts, transition_co
     for i in range(len(words) - 1, 0, -1):
         predicted_tags[i - 1] = backpointers[i][predicted_tags[i]]
 
-    return predicted_tags
+    return predicted_tags, ground_truth_tags
 
+def predict_tags(word_tag_counts, tag_counts, transition_counts, sentence_count, file):
+    predicted_tags_list = []
 
-
-def predict_tags(word_tag_counts, tag_counts, transition_counts, sentence_count, file): 
     with open(file, 'r') as file:
         for line in file:
             sentence = line.strip()
-            predicted_tags = viterbi(sentence, sentence_count, word_tag_counts, tag_counts, transition_counts)
+            predicted_tags, ground_truth_tags = viterbi(sentence, sentence_count, word_tag_counts, tag_counts, transition_counts)
+            predicted_tags_list.append((predicted_tags, ground_truth_tags))
+
+    return predicted_tags_list
 
 def main():
     train_file = "../data/train/POS.train"
