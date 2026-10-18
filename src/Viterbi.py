@@ -1,3 +1,4 @@
+import sys
 import math
 
 def count_word_tag_pairs(file):
@@ -200,8 +201,12 @@ def evaluate(predicted_tags_list):
     print(f"Accuracy: {accuracy:.2%}")
 
 def main():
-    train_file = "../data/train/POS.train"
-    test_file = "../data/test/POS.test"
+    if len(sys.argv) != 3:
+        print("Usage: python Viterbi.py <train_file> <test_file>")
+        sys.exit(1)
+
+    train_file = sys.argv[1]
+    test_file = sys.argv[2]
 
     word_tag_counts = count_word_tag_pairs(train_file)
     tag_counts = count_tag_counts(train_file)
@@ -211,13 +216,7 @@ def main():
     predicted_tags_list = predict_tags(word_tag_counts, tag_counts, transition_counts, sentence_count, test_file)
     evaluate(predicted_tags_list)
 
-    '''
-    print("Empty string exists:", "" in tag_counts)
-    print("Quotation tag exists:", "''" in tag_counts)
-    print("Tags:", [repr(tag) for tag in tag_counts if not tag or tag == "''"])
-    '''
-
     return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
