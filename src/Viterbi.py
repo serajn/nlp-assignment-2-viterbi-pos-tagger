@@ -1,3 +1,5 @@
+import math
+
 def count_word_tag_pairs(file):
     word_tag_counts = {}
 
@@ -70,44 +72,85 @@ def count_sentences(file):
 
     return sentence_count
 
-def viterbi(sentence, sentence_count, word_tag_counts, tag_counts, transition_counts):
+
+def viterbi(sentence, sentence_count, word_tag_counts, tag_counts, transition_counts, alpha=1.0):
     words = []
     ground_truth_tags = []
 
     for token in sentence.split():
-        if token.strip():
-            word, tag = token.strip().rsplit('/', 1) # Strip the tag from the word/tag pair
-            words.append(word)
-            ground_truth_tags.append(tag)
+        word, gold_tag = token.rsplit('/', 1)
+        words.append(word)
+        ground_truth_tags.append(gold_tag)
+
+    if not words:
+        return [], []
+
+    tags = list(tag_counts)
+    num_tags = len(tags)
+
+    # Laplace smoothing
+
+    # Training vocabulary size. Reserve one additional slot for unknown words.
+    vocabulary = {word for word, tag in word_tag_counts}
+    vocab_size = len(vocabulary) + 1
+
+    # Count observed outgoing transitions from each tag.
+    outgoing_counts = {tag: 0 for tag in tags}
+
+    for (prev_tag, curr_tag), count in transition_counts.items():
+        if prev_tag in outgoing_counts and curr_tag in tag_counts:
+            outgoing_counts[prev_tag] += count
 
     # Initialization Step
     scores = {}
     backpointers = {0: {}}
 
-    for tag in tag_counts:
-        emission_probability = word_tag_counts.get((words[0], tag), 0) / tag_counts[tag]
-        start_probability = transition_counts.get(("<START>", tag), 0) / sentence_count
+    for tag in tags:
+        emission_probability = (
+            word_tag_counts.get((words[0], tag), 0) + alpha
+        ) / (
+            tag_counts[tag] + alpha * vocab_size
+        )
 
-        scores[tag] = emission_probability * start_probability
-        backpointers[0][tag] = None  # No backpointer for the first word
+        start_probability = (
+            transition_counts.get(("<START>", tag), 0) + alpha
+        ) / (
+            sentence_count + alpha * num_tags
+        )
+
+        scores[tag] = math.log(emission_probability) + math.log(start_probability)
+        backpointers[0][tag] = None
 
     # Iteration Step
     for i in range(1, len(words)):
         new_scores = {}
         new_backpointers = {}
-        
-        for tag in tag_counts:
-            emission_probability = word_tag_counts.get((words[i], tag), 0) / tag_counts[tag]
 
-            best_score = 0
+        for tag in tags:
+            emission_probability = (
+                word_tag_counts.get((words[i], tag), 0) + alpha
+            ) / (
+                tag_counts[tag] + alpha * vocab_size
+            )
+
+            best_score = float('-inf')
             best_prev_tag = None
 
-            for prev_tag in tag_counts:
-                transition_probability = transition_counts.get((prev_tag, tag), 0) / tag_counts[prev_tag]
-                potential_score = scores[prev_tag] * transition_probability * emission_probability
+            for prev_tag in tags:
+                transition_probability = (
+                    transition_counts.get((prev_tag, tag), 0) + alpha
+                ) / (
+                    outgoing_counts[prev_tag] + alpha * num_tags
+                )
 
-                if potential_score > best_score:
-                    best_score = potential_score
+                candidate_score = (
+                    scores[prev_tag]
+                    + math.log(transition_probability)
+                    + math.log(emission_probability)
+                )
+
+                if candidate_score > best_score:
+                    best_score = candidate_score
                     best_prev_tag = prev_tag
 
             new_scores[tag] = best_score
@@ -126,6 +169,7 @@ def viterbi(sentence, sentence_count, word_tag_counts, tag_counts, transition_co
         predicted_tags[i - 1] = backpointers[i][predicted_tags[i]]
 
     return predicted_tags, ground_truth_tags
+
 
 def predict_tags(word_tag_counts, tag_counts, transition_counts, sentence_count, file):
     predicted_tags_list = []
@@ -157,14 +201,21 @@ def evaluate(predicted_tags_list):
 
 def main():
     train_file = "../data/train/POS.train"
+    test_file = "../data/test/POS.test"
 
     word_tag_counts = count_word_tag_pairs(train_file)
     tag_counts = count_tag_counts(train_file)
     transition_counts = count_transition_counts(train_file)
     sentence_count = count_sentences(train_file)
 
-    predicted_tags_list = predict_tags(word_tag_counts, tag_counts, transition_counts, sentence_count, "../data/test/POS.test")
+    predicted_tags_list = predict_tags(word_tag_counts, tag_counts, transition_counts, sentence_count, test_file)
     evaluate(predicted_tags_list)
+
+    '''
+    print("Empty string exists:", "" in tag_counts)
+    print("Quotation tag exists:", "''" in tag_counts)
+    print("Tags:", [repr(tag) for tag in tag_counts if not tag or tag == "''"])
+    '''
 
     return 0
 
