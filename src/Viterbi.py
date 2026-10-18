@@ -70,28 +70,68 @@ def count_sentences(file):
 
     return sentence_count
 
-def viterbi(sentence, word_tag_counts, tag_counts, transition_counts):
+def viterbi(sentence, sentence_count, word_tag_counts, tag_counts, transition_counts):
     words = []
-    tags = []
 
     for token in sentence.split():
         if token.strip():
-            word, tag = token.strip().rsplit('/', 1)
+            word, _ = token.strip().rsplit('/', 1)
             words.append(word)
-            tags.append(tag)
 
     # Initialization Step
-    for t in range(len(tag_counts)):
-        score = word_tag_counts[(words[0], tags[0])] / tag_counts[tags[0]] * transition_counts["<START>", tags[0]] / tag_counts["<START>"]
+    scores = {}
+    backpointers = {0: {}}
+
+    for tag in tag_counts:
+        emission_probability = word_tag_counts.get((words[0], tag), 0) / tag_counts[tag]
+        start_probability = transition_counts.get(("<START>", tag), 0) / sentence_count
+
+        scores[tag] = emission_probability * start_probability
+        backpointers[0][tag] = None  # No backpointer for the first word
+
+    # Iteration Step
+    for i in range(1, len(words)):
+        new_scores = {}
+        new_backpointers = {}
         
+        for tag in tag_counts:
+            emission_probability = word_tag_counts.get((words[i], tag), 0) / tag_counts[tag]
+
+            best_score = 0
+            best_prev_tag = None
+
+            for prev_tag in tag_counts:
+                transition_probability = transition_counts.get((prev_tag, tag), 0) / tag_counts[prev_tag]
+                potential_score = scores[prev_tag] * transition_probability * emission_probability
+
+                if potential_score > best_score:
+                    best_score = potential_score
+                    best_prev_tag = prev_tag
+
+            new_scores[tag] = best_score
+            new_backpointers[tag] = best_prev_tag
+
+        scores = new_scores
+        backpointers[i] = new_backpointers
+
+    # Sequence Identification Step
+    best_tag = max(scores, key=scores.get)
+
+    predicted_tags = [None] * len(words)
+    predicted_tags[-1] = best_tag
+
+    for i in range(len(words) - 1, 0, -1):
+        predicted_tags[i - 1] = backpointers[i][predicted_tags[i]]
+
+    return predicted_tags
 
 
-def predict_tags(word_tag_counts, tag_counts, transition_counts, file): 
+
+def predict_tags(word_tag_counts, tag_counts, transition_counts, sentence_count, file): 
     with open(file, 'r') as file:
         for line in file:
             sentence = line.strip()
-            predicted_tags = viterbi(sentence, word_tag_counts, tag_counts, transition_counts)
-            print(" ".join(predicted_tags))
+            predicted_tags = viterbi(sentence, sentence_count, word_tag_counts, tag_counts, transition_counts)
 
 def main():
     train_file = "../data/train/POS.train"
@@ -99,6 +139,7 @@ def main():
     word_tag_counts = count_word_tag_pairs(train_file)
     tag_counts = count_tag_counts(train_file)
     transition_counts = count_transition_counts(train_file)
+    sentence_count = count_sentences(train_file)
 
     return 0
 
