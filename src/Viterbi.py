@@ -15,8 +15,11 @@ def count_word_tag_pairs(file):
                     else:
                         word_tag_counts[(word, tag)] = 1
 
+    # For debugging purposes (ignore)
+    '''
     with open('word_tag_counts.txt', 'w') as f:
         f.write(f" {word_tag_counts}\n")
+    '''
     
     return word_tag_counts
 
@@ -33,9 +36,12 @@ def count_tag_counts(file):
                         tag_counts[tag] += 1
                     else:
                         tag_counts[tag] = 1
-
+    
+    # For debugging purposes (ignore)
+    '''
     with open('tag_counts.txt', 'w') as f:
         f.write(f" {tag_counts}\n")
+    '''
 
     return tag_counts
 
@@ -57,10 +63,13 @@ def count_transition_counts(file):
                     previous_tag = tag
                 
             previous_tag = "<START>"  # Reset at the end of a sentence
-
+    
+    # For debugging purposes (ignore)
+    '''
     with open('transition_counts.txt', 'w') as f:
         f.write(f" {transition_counts}\n")
-
+        
+    '''
     return transition_counts
 
 def count_sentences(file):

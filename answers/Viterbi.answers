@@ -1,0 +1,24 @@
+Completeness:
+    - Program collects raw counts from training set for Viterbi probabilities       - Complete
+    - Viterbi algorithm impmplemented                                               - Complete
+    - Training set tags are predicted                                               - Complete
+    - Results are evalutated                                                        - Complete
+
+    The program is fully Complete
+
+System Accuracy (Viterbi): 87.83%
+System Accuracy (Baseline): 87.24%
+
+Three Errors (found in the predicted tags correspondig to the last three sentences of the training corpus):
+    1. Incorrect verb and participle tags - The possilbe reason for this mistake is the model may
+       have learned misleading word-tag associations or transition probabilities from the training
+       corpus.
+    2. Singular versus plural nouns - The model may have learned that the word is more frequently used 
+       as a singular noun (NN) than as a plural noun (NNS). Because the model relies on learned emission 
+       and transition probabilities, it may choose the singular tag even when the sentence's grammatical 
+       context supports a plural noun.
+    3. Currency Symbol misclassified as noun - The model may have learned an insufficient or misleading 
+       association between the currency symbol and its tag. In the training data, numerical expressions 
+       can appear in different contexts, and the model may not have learned the specific annotation convention 
+       used for this example. The currency symbol is annotated as CD in the ground truth, but the model 
+       predicts $.

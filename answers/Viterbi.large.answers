@@ -1,0 +1,8 @@
+Completeness:
+    The program is complete. However, the program crashes becuase the program assumes
+    the corpus tokens are in the form (word/tag). After investigation, malformed tokens
+    were discovered in the training corpus "POS.train.large"
+
+    Example (line 1903): 48705 For/IN six/CD years/NNS ,/, T./NP Marshall/NP Hahn/NP Jr./NP has/VBZ made/VBN corporate/JJ acquisitions/NNS in/IN the/DT George/NP Bush/NP mode/NN :/: kind/JJ and/CC gentle/JJ ./.
+
+    The first token is malformed causing the line: word, tag = token.strip().rsplit('/', 1) to fail.
